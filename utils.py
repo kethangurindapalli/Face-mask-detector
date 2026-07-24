@@ -7,6 +7,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, "models")
 MODEL_PATH = os.path.join(MODELS_DIR, "mask_detector.keras")
 
+_frame_cache = {"faces": [], "boxes": [], "counter": 0}
+
 
 def load_models():
     if not os.path.exists(MODEL_PATH):
@@ -34,6 +36,25 @@ def detect_faces(frame, face_cascade):
     return [(x, y, x + w, y + h) for (x, y, w, h) in faces]
 
 
+def process_frame(frame, mask_model, face_cascade, skip=2):
+    _frame_cache["counter"] += 1
+    should_detect = _frame_cache["counter"] % (skip + 1) == 0
+
+    if should_detect:
+        faces = detect_faces(frame, face_cascade)
+        boxes = []
+        for box in faces:
+            label, conf = predict_mask(frame, box, mask_model)
+            boxes.append((box, label, conf))
+        _frame_cache["faces"] = faces
+        _frame_cache["boxes"] = boxes
+    else:
+        boxes = _frame_cache["boxes"]
+
+    for box, label, conf in boxes:
+        draw_results(frame, box, label, conf)
+
+
 def predict_mask(frame, face_box, mask_model):
     x1, y1, x2, y2 = face_box
     face_roi = frame[y1:y2, x1:x2]
@@ -44,7 +65,7 @@ def predict_mask(frame, face_box, mask_model):
     face_roi = face_roi.astype("float32") / 255.0
     face_roi = np.expand_dims(face_roi, axis=0)
 
-    pred = mask_model.predict(face_roi, verbose=0)[0]
+    pred = mask_model.predict_on_batch(face_roi)[0]
     label_idx = np.argmax(pred)
     confidence = pred[label_idx]
     label = "Mask" if label_idx == 0 else "No Mask"

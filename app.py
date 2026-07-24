@@ -1,8 +1,7 @@
 import os
 import cv2
-import numpy as np
 from flask import Flask, render_template, Response
-from utils import load_models, detect_faces, predict_mask, draw_results
+from utils import load_models, process_frame
 
 app = Flask(__name__)
 
@@ -14,9 +13,12 @@ camera = None
 def get_camera():
     global camera
     if camera is None:
-        camera = cv2.VideoCapture(0)
+        camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     if not camera.isOpened():
-        camera = cv2.VideoCapture(0)
+        camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    camera.set(cv2.CAP_PROP_FPS, 15)
     return camera
 
 
@@ -29,11 +31,7 @@ def generate_frames():
             break
 
         frame = cv2.flip(frame, 1)
-        faces = detect_faces(frame, face_net)
-
-        for box in faces:
-            label, conf = predict_mask(frame, box, mask_model)
-            draw_results(frame, box, label, conf)
+        process_frame(frame, mask_model, face_net, skip=2)
 
         ret, buffer = cv2.imencode(".jpg", frame)
         frame_bytes = buffer.tobytes()

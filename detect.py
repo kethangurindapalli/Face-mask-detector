@@ -1,5 +1,5 @@
 import cv2
-from utils import load_models, detect_faces, predict_mask, draw_results
+from utils import load_models, process_frame
 
 
 def main():
@@ -7,7 +7,10 @@ def main():
     mask_model, face_net = load_models()
 
     print("[*] Opening webcam...")
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
     if not cap.isOpened():
         print("[!] Cannot access webcam")
         return
@@ -20,11 +23,7 @@ def main():
             break
 
         frame = cv2.flip(frame, 1)
-        faces = detect_faces(frame, face_net)
-
-        for box in faces:
-            label, conf = predict_mask(frame, box, mask_model)
-            draw_results(frame, box, label, conf)
+        process_frame(frame, mask_model, face_net, skip=2)
 
         cv2.imshow("Face Mask Detector", frame)
 
