@@ -1,0 +1,10 @@
+tensorflow
+opencv-python
+opencv-contrib-python
+flask
+numpy
+matplotlib
+pillow
+scikit-learn
+kagglehub
+requests

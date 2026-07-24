@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+venv/
+.venv/
+
+# TensorFlow/Keras models
+models/*.keras
+models/*.h5
+!models/.gitkeep
+
+# Dataset (too large for git)
+dataset/
+
+# OpenCV face detector downloads
+face_detector/*.caffemodel
+face_detector/*.prototxt
+
+# Kaggle cache
+.kaggle/
+.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Training artifacts
+*.png
+*.csv
